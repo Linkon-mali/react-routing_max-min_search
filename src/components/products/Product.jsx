@@ -1,0 +1,76 @@
+import React, {useEffect, useState} from 'react';
+import {Link, useSearchParams} from 'react-router-dom';
+import { getProductData } from '../../data/productData';
+import withLayout from '../../hocs/withLayout';
+import ProductFilter from './ProductFilter';
+
+const Product = () => {
+
+  const [products, setProducts] = useState(getProductData());
+
+  const [searchParams] = useSearchParams();
+  // console.log('SearchParams', searchParams.get('min_price'));
+  // console.log('SearchParams', searchParams.get('max_price'));
+  // console.log('SearchParams', searchParams.get('search'));
+  const min_price = searchParams.get('min_price') === null ? '' : searchParams.get('min_price');
+  const max_price = searchParams.get('max_price') === null ? '' : searchParams.get('max_price');
+  const search = searchParams.get('search') === null ? '' : searchParams.get('search');
+
+  useEffect(() => {
+    filterProducts();
+  }, []);
+
+  const filterProducts = () => {
+    // check minimum one entry occur
+      if(search.length || min_price.length || max_price.length){
+            const min = parseFloat(min_price);
+            const max = parseFloat(max_price);
+            // filter products with these conditions
+            const filtered = products.filter(product => {
+              // if min price < product price get product
+              if(min > 0 && min > product.price){
+                return false;
+              }
+              // max price
+              if(min > 0 && max < product.price){
+                return false;
+              }
+              // search
+              if(search.length > 0 && !product.title.toLowerCase().includes(search.toLowerCase())){
+                return false;
+              }
+
+              return true;
+            })
+
+            // set product
+            setProducts(filtered);
+      }
+  }
+
+  return (
+    <div className='product-area-full'>
+      <h2>Products</h2>
+      <ProductFilter  />
+      <br/>
+      <div className='product-area'>
+        {
+          products.map((product, index) => (
+            <div key={index} className='product-single'>
+              <p>
+                <img src={product.image} style={{width: 'auto', height: '100px'}} />
+              </p>
+              <h3>{product.title}</h3>
+              <h3 style={{color: 'red'}}>{product.price}BDT</h3>
+              <p>
+                <Link to={`/products/${product.id}`} className='product-button'>Product Details</Link>
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  )
+}
+
+export default withLayout(Product);
